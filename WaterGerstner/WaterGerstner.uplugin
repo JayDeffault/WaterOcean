@@ -1,0 +1,23 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "1.0.0",
+  "FriendlyName": "Water Gerstner",
+  "Description": "Highly configurable, interactive Gerstner ocean system with buoyancy, shoreline surf, rock breakers, foam and anti-tiling material support for Unreal Engine 5.7.",
+  "Category": "Rendering",
+  "CreatedBy": "OpenAI",
+  "CreatedByURL": "https://openai.com",
+  "DocsURL": "",
+  "MarketplaceURL": "",
+  "SupportURL": "",
+  "CanContainContent": true,
+  "IsBetaVersion": false,
+  "Installed": false,
+  "Modules": [
+    {
+      "Name": "WaterGerstner",
+      "Type": "Runtime",
+      "LoadingPhase": "PostConfigInit"
+    }
+  ]
+}

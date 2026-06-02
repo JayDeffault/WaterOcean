@@ -1,0 +1,68 @@
+#ifndef WATER_GERSTNER_COMMON_USH
+#define WATER_GERSTNER_COMMON_USH
+
+#define WATER_GERSTNER_TWO_PI 6.28318530718
+
+struct FWaterGerstnerWaveGpu
+{
+    float2 Direction;
+    float Amplitude;
+    float Wavelength;
+    float Steepness;
+    float Speed;
+    float PhaseOffset;
+    float FoamContribution;
+};
+
+float WaterHash12(float2 P)
+{
+    float3 P3 = frac(float3(P.xyx) * 0.1031);
+    P3 += dot(P3, P3.yzx + 33.33);
+    return frac((P3.x + P3.y) * P3.z);
+}
+
+float WaterTriPlanarAntiTile(float2 Uv, float ScaleA, float ScaleB, float Blend)
+{
+    const float2 TileA = Uv * ScaleA;
+    const float2 TileB = (Uv + WaterHash12(floor(Uv))) * ScaleB;
+    return lerp(WaterHash12(TileA), WaterHash12(TileB), Blend);
+}
+
+void WaterGerstnerEvaluateWave(
+    FWaterGerstnerWaveGpu Wave,
+    float3 WorldPosition,
+    float Time,
+    float GlobalAmplitude,
+    float GlobalSpeed,
+    out float3 OutOffset,
+    out float3 OutNormalContribution,
+    out float OutFoam)
+{
+    const float2 Direction = normalize(Wave.Direction + float2(1e-4, 1e-4));
+    const float WaveNumber = WATER_GERSTNER_TWO_PI / max(Wave.Wavelength, 1.0);
+    const float AngularFrequency = sqrt(980.0 * WaveNumber) * Wave.Speed * GlobalSpeed;
+    const float Amplitude = Wave.Amplitude * GlobalAmplitude;
+    const float Phase = WaveNumber * dot(Direction, WorldPosition.xy) - AngularFrequency * Time + Wave.PhaseOffset;
+    const float SinPhase = sin(Phase);
+    const float CosPhase = cos(Phase);
+    const float Q = saturate(Wave.Steepness);
+
+    OutOffset = float3(Direction * (Q * Amplitude * CosPhase), Amplitude * SinPhase);
+    OutNormalContribution = float3(-Direction * WaveNumber * Amplitude * CosPhase, 1.0 - Q * WaveNumber * Amplitude * SinPhase);
+    OutFoam = smoothstep(0.62, 0.97, SinPhase) * Wave.FoamContribution;
+}
+
+float WaterFoamMask(float CrestFoam, float ShoreMask, float BreakerMask, float InteractionMask)
+{
+    const float ShoreFoam = smoothstep(0.15, 0.95, ShoreMask);
+    const float BreakerFoam = smoothstep(0.05, 0.9, BreakerMask);
+    return saturate(CrestFoam + ShoreFoam * 0.75 + BreakerFoam + InteractionMask);
+}
+
+float3 WaterAbsorption(float3 SceneColor, float Depth, float3 ShallowColor, float3 DeepColor, float Absorption)
+{
+    const float DepthMask = saturate(1.0 - exp(-Depth * max(Absorption, 0.0001)));
+    return lerp(SceneColor * ShallowColor, DeepColor, DepthMask);
+}
+
+#endif
