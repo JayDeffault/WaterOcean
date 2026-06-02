@@ -142,7 +142,7 @@ FWaterSurfaceSample AGerstnerWaterBody::SampleWaterSurface(const FVector& WorldL
     Sample.Position = FVector(WorldLocation.X, WorldLocation.Y, GetActorLocation().Z) + HorizontalOffset;
     Sample.Position.Z += HeightOffset;
     Sample.Height = Sample.Position.Z;
-    Sample.Normal = NormalAccumulator.GetSafeNormal(FVector::UpVector);
+    Sample.Normal = NormalAccumulator.GetSafeNormal(UE_SMALL_NUMBER, FVector::UpVector);
     Sample.Velocity = Velocity;
     Sample.Foam = FMath::Clamp(Foam, 0.0f, 8.0f);
     Sample.ShoreMask = ShoreMask;
